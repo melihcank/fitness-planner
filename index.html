@@ -2,30 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- mobil + çentik -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitness Planner</title>
-
-    <!-- ikonlar / stil -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2dc653">
-
-    <!-- iOS / Apple PWA iyileştirmeleri -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Fitness Planner">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-512.png">
-
+    <link rel="apple-touch-icon" href="icons/icon-512.png">
     <script>
       // Ensure default lang is English for native controls before JS runs
       document.documentElement.lang = 'en-US';
     </script>
-</head>
+  </head>
 
 <body>
 <div class="container">
@@ -92,6 +80,13 @@
                         </div>
                     </div>
                     <div class="settings-group">
+                        <div class="settings-group-title" data-translate="week-start">Week Start</div>
+                        <button type="button" class="settings-item" id="weekStartBtn">
+                            <i class="fas fa-calendar-day"></i>
+                            <span id="weekStartLabel">Week starts on: Monday</span>
+                        </button>
+                    </div>
+                    <div class="settings-group">
                         <button type="button" class="settings-item danger" id="deleteDataBtn" data-translate="delete-data">Delete Data</button>
                     </div>
                 </div>
@@ -132,6 +127,18 @@
                             <input type="number" class="measurement-input" id="heightFeetInput" min="0" step="1">
                             <input type="number" class="measurement-input" id="heightInchesInput" min="0" step="0.1">
                         </div>
+                    </div>
+
+                    <div class="measurement-field">
+                        <select class="measurement-input" id="genderInput">
+                            <option value="" data-translate="gender">Gender</option>
+                            <option value="male" data-translate="male">Male</option>
+                            <option value="female" data-translate="female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="measurement-field">
+                        <input type="number" class="measurement-input" id="ageInput" placeholder="Age" min="0" step="1">
                     </div>
 
                     <button class="btn btn-primary" id="saveMeasurementBtn" data-translate="save">Save</button>
@@ -179,6 +186,11 @@
                         <span data-translate="bmi-severely-obese">SEVERELY OBESE</span>
                         <span>&gt;= 40.0</span>
                     </div>
+                </div>
+
+                <div class="body-fat-block">
+                    <div class="body-fat-label" data-translate="body-fat">Estimated Body Fat</div>
+                    <div class="body-fat-value" id="bodyFatValue">--</div>
                 </div>
             </div>
         </div>
@@ -293,6 +305,6 @@
       navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW reg failed', e); });
     });
   }
-</script>
+  </script>
 </body>
 </html>

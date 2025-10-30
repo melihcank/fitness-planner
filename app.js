@@ -6,6 +6,8 @@ let currentDayIndex = null;
 
 let currentLanguage = 'en';
 let currentTheme = 'light';
+// 0=Sunday .. 6=Saturday; default Monday (1)
+let weekStart = 1;
 
 let workouts = {};            // {weekKey: {dayIndex: [ {...}, ...]}}
 let measurementData = [];     // [{ date:'YYYY-MM-DD', weight:80, height:180 }]
@@ -95,6 +97,13 @@ const translations = {
         'switch-to-dark': 'Karanlık moda geç',
         'language': 'Dil',
         'delete-data': 'Verileri Sil',
+        'week-start': 'Haftanın Başlangıcı',
+        'week-start-label': 'Hafta şu gün başlar: {day}',
+        'gender': 'Cinsiyet',
+        'male': 'Erkek',
+        'female': 'Kadın',
+        'age': 'Yaş',
+        'body-fat': 'Tahmini Yağ Oranı',
         'confirm-delete-message': 'Verileri silmek istediğinize emin misiniz?',
         'confirm': 'Evet',
         'data-cleared': 'Tüm veriler silindi!',
@@ -175,6 +184,13 @@ const translations = {
         'switch-to-dark': 'Switch to Dark Mode',
         'language': 'Language',
         'delete-data': 'Delete Data',
+        'week-start': 'Week Start',
+        'week-start-label': 'Week starts on: {day}',
+        'gender': 'Gender',
+        'male': 'Male',
+        'female': 'Female',
+        'age': 'Age',
+        'body-fat': 'Estimated Body Fat',
         'confirm-delete-message': 'Are you sure you want to delete all data?',
         'confirm': 'Yes',
         'data-cleared': 'All data deleted!',
@@ -254,6 +270,13 @@ const translations = {
         'switch-to-light': 'Passer en mode clair',
         'switch-to-dark': 'Passer en mode sombre',
         'language': 'Langue',
+        'week-start': 'Début de semaine',
+        'week-start-label': 'La semaine commence le: {day}',
+        'gender': 'Sexe',
+        'male': 'Homme',
+        'female': 'Femme',
+        'age': 'Âge',
+        'body-fat': 'Graisse corporelle estimée',
         'delete-data': 'Supprimer les données',
         'confirm-delete-message': 'Êtes-vous sûr de vouloir supprimer toutes les données ?',
         'confirm': 'Oui',
@@ -334,6 +357,20 @@ const translations = {
         'switch-to-light': 'Cambiar a modo claro',
         'switch-to-dark': 'Cambiar a modo oscuro',
         'language': 'Idioma',
+        'week-start': 'Início da semana',
+        'week-start-label': 'A semana começa em: {day}',
+        'gender': 'Gênero',
+        'male': 'Masculino',
+        'female': 'Feminino',
+        'age': 'Idade',
+        'body-fat': 'Gordura corporal estimada',
+        'week-start': 'Inicio de semana',
+        'week-start-label': 'La semana comienza el: {day}',
+        'gender': 'Género',
+        'male': 'Hombre',
+        'female': 'Mujer',
+        'age': 'Edad',
+        'body-fat': 'Grasa corporal estimada',
         'delete-data': 'Eliminar datos',
         'confirm-delete-message': '¿Seguro que deseas eliminar todos los datos?',
         'confirm': 'Sí',
@@ -414,6 +451,13 @@ const translations = {
         'switch-to-light': 'Zum hellen Modus wechseln',
         'switch-to-dark': 'Zum dunklen Modus wechseln',
         'language': 'Sprache',
+        'week-start': 'Wochenbeginn',
+        'week-start-label': 'Woche beginnt am: {day}',
+        'gender': 'Geschlecht',
+        'male': 'Männlich',
+        'female': 'Weiblich',
+        'age': 'Alter',
+        'body-fat': 'Geschätzter Körperfettanteil',
         'delete-data': 'Daten löschen',
         'confirm-delete-message': 'Möchten Sie wirklich alle Daten löschen?',
         'confirm': 'Ja',
@@ -574,6 +618,13 @@ const translations = {
         'switch-to-light': 'Passa alla modalità chiara',
         'switch-to-dark': 'Passa alla modalità scura',
         'language': 'Lingua',
+        'week-start': 'Inizio settimana',
+        'week-start-label': 'La settimana inizia: {day}',
+        'gender': 'Sesso',
+        'male': 'Uomo',
+        'female': 'Donna',
+        'age': 'Età',
+        'body-fat': 'Grasso corporeo stimato',
         'delete-data': 'Elimina dati',
         'confirm-delete-message': 'Sei sicuro di voler eliminare tutti i dati?',
         'confirm': 'Sì',
@@ -646,6 +697,15 @@ function initializeApp() {
 
     initializeUnitPreferences();
 
+    // week start preference
+    const savedWeekStart = localStorage.getItem('weekStart');
+    if (savedWeekStart !== null) {
+        const parsed = parseInt(savedWeekStart);
+        if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 6) {
+            weekStart = parsed;
+        }
+    }
+
     // ensure structure for current week
     const weekKey = getWeekKey(currentWeekOffset);
     if (!workouts[weekKey]) workouts[weekKey] = {};
@@ -693,6 +753,7 @@ function loadFromLocalStorage() {
 function saveToLocalStorage() {
     localStorage.setItem('workouts', JSON.stringify(workouts));
     localStorage.setItem('measurementData', JSON.stringify(measurementData));
+    localStorage.setItem('weekStart', String(weekStart));
 }
 
 /* =========================
@@ -734,6 +795,18 @@ function setupEventListeners() {
     const deleteDataBtn = document.getElementById('deleteDataBtn');
     if (deleteDataBtn) {
         deleteDataBtn.addEventListener('click', openConfirmDeleteModal);
+    }
+
+    // Week start toggle button (cycles days)
+    const weekStartBtn = document.getElementById('weekStartBtn');
+    if (weekStartBtn) {
+        weekStartBtn.addEventListener('click', () => {
+            weekStart = (weekStart + 1) % 7; // 0..6
+            saveToLocalStorage();
+            updateWeekStartLabel();
+            renderWeek();
+        });
+        updateWeekStartLabel();
     }
 
     document.getElementById('confirmDeleteCancel').addEventListener('click', closeConfirmDeleteModal);
@@ -991,6 +1064,7 @@ function setLanguage(lang) {
     renderWeek();
     updateLastMeasurementInfo();
     updateBMI();
+    updateWeekStartLabel();
     // Re-render measurement date display according to language
     const iso = document.getElementById('measurementDateISO');
     const display = document.getElementById('measurementDateInput');
@@ -1029,6 +1103,7 @@ function setTheme(theme) {
 
 function getLanguageCode() {
     const map = {
+        tr: 'tr-TR',
         en: 'en-US',
         fr: 'fr-FR',
         es: 'es-ES',
@@ -1037,6 +1112,22 @@ function getLanguageCode() {
         it: 'it-IT'
     };
     return map[currentLanguage] || 'en-US';
+}
+
+// Localized weekday name by index where 0=Sunday..6=Saturday
+function localizedWeekdayName(index0Sunday) {
+    const keys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const key = keys[(index0Sunday % 7 + 7) % 7];
+    const dict = translations[currentLanguage] || translations['en'];
+    return dict[key] || key;
+}
+
+function updateWeekStartLabel() {
+    const el = document.getElementById('weekStartLabel');
+    if (!el) return;
+    const dict = translations[currentLanguage] || translations['en'];
+    const tmpl = dict['week-start-label'] || 'Week starts on: {day}';
+    el.textContent = tmpl.replace('{day}', localizedWeekdayName(weekStart));
 }
 
 /* =========================
@@ -1069,26 +1160,29 @@ function renderWeek() {
         if (!workouts[weekKey][i]) workouts[weekKey][i] = [];
     }
 
-    // header week text
-    const weekStart = new Date(monday);
-    const weekEnd = new Date(monday);
-    weekEnd.setDate(monday.getDate() + 6);
+    // header week text adapted to user preference
+    const displayStart = new Date(monday);
+    displayStart.setDate(monday.getDate() + (weekStart - 1));
+    const displayEnd = new Date(displayStart);
+    displayEnd.setDate(displayStart.getDate() + 6);
 
     const opts = { day: 'numeric', month: 'short' };
-    const startText = weekStart.toLocaleDateString(getLanguageCode(), opts);
-    const endText = weekEnd.toLocaleDateString(getLanguageCode(), opts);
+    const startText = displayStart.toLocaleDateString(getLanguageCode(), opts);
+    const endText = displayEnd.toLocaleDateString(getLanguageCode(), opts);
 
     document.getElementById('weekDisplay').textContent = `${startText} - ${endText}`;
 
     const dayKeys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    const shift = (weekStart - 1 + 7) % 7; // display index -> storage index
 
     for (let i=0; i<7; i++) {
-        const dayDate = new Date(monday);
-        dayDate.setDate(monday.getDate() + i);
+        const storeIndex = (i + shift) % 7;
+        const dayDate = new Date(displayStart);
+        dayDate.setDate(displayStart.getDate() + i);
 
         const col = document.createElement('div');
         col.className = 'day-column';
-        col.dataset.dayIndex = i;
+        col.dataset.dayIndex = storeIndex;
 
         // header
         const header = document.createElement('div');
@@ -1099,7 +1193,7 @@ function renderWeek() {
 
         const titleEl = document.createElement('div');
         titleEl.className = 'day-title';
-        titleEl.textContent = translations[currentLanguage][dayKeys[i]];
+        titleEl.textContent = translations[currentLanguage][dayKeys[storeIndex]];
 
         const dayMenuWrapper = document.createElement('div');
         dayMenuWrapper.className = 'day-menu';
@@ -1115,7 +1209,7 @@ function renderWeek() {
         copyDayOption.className = 'day-menu-option';
         copyDayOption.textContent = translations[currentLanguage]['copy-day'];
         copyDayOption.addEventListener('click', () => {
-            copyDay(i);
+            copyDay(storeIndex);
             dayMenuDropdown.classList.remove('show');
         });
 
@@ -1123,7 +1217,7 @@ function renderWeek() {
         pasteDayOption.className = 'day-menu-option';
         pasteDayOption.textContent = translations[currentLanguage]['paste-day'];
         pasteDayOption.addEventListener('click', () => {
-            pasteDay(i);
+            pasteDay(storeIndex);
             dayMenuDropdown.classList.remove('show');
         });
 
@@ -1155,18 +1249,18 @@ function renderWeek() {
         // workouts list
         const workoutsContainer = document.createElement('div');
         workoutsContainer.className = 'workouts-container';
-        workoutsContainer.dataset.dayIndex = i;
+        workoutsContainer.dataset.dayIndex = storeIndex;
 
         // add workout btn
         const addBtn = document.createElement('button');
         addBtn.className = 'add-workout-btn';
         addBtn.innerHTML = `<i class="fas fa-plus"></i> ${translations[currentLanguage]['add-workout']}`;
-        addBtn.addEventListener('click', () => openModal(i));
+        addBtn.addEventListener('click', () => openModal(storeIndex));
 
         // summary
         const summary = document.createElement('div');
         summary.className = 'day-summary';
-        summary.dataset.dayIndex = i;
+        summary.dataset.dayIndex = storeIndex;
 
         // assemble
         col.appendChild(header);
@@ -1177,7 +1271,7 @@ function renderWeek() {
         daysContainer.appendChild(col);
 
         setupDragAndDrop(workoutsContainer);
-        renderDayWorkouts(i);
+        renderDayWorkouts(storeIndex);
     }
 }
 
@@ -1441,6 +1535,8 @@ function performDataDeletion() {
     updateWeightUnitUI(true);
     updateHeightUnitUI(true);
     setTodayDate();
+    weekStart = 1;
+    updateWeekStartLabel?.();
     if (wasChartInitialized) {
         updateChart();
     }
@@ -2173,6 +2269,8 @@ function saveMeasurement() {
     const heightInput = document.getElementById('heightInput');
     const feetInput = document.getElementById('heightFeetInput');
     const inchesInput = document.getElementById('heightInchesInput');
+    const genderInput = document.getElementById('genderInput');
+    const ageInput = document.getElementById('ageInput');
 
     let rawWeight = parseFloat(weightInput.value);
     if (!dateVal || Number.isNaN(rawWeight) || rawWeight <= 0) {
@@ -2233,8 +2331,13 @@ function saveMeasurement() {
     if (idx !== -1) {
         measurementData[idx].weight = weightStored;
         measurementData[idx].height = heightStored;
+        if (genderInput && genderInput.value) measurementData[idx].gender = genderInput.value;
+        if (ageInput && ageInput.value) measurementData[idx].age = parseInt(ageInput.value) || undefined;
     } else {
-        measurementData.push({ date: dateVal, weight: weightStored, height: heightStored });
+        const entry = { date: dateVal, weight: weightStored, height: heightStored };
+        if (genderInput && genderInput.value) entry.gender = genderInput.value;
+        if (ageInput && ageInput.value) entry.age = parseInt(ageInput.value) || undefined;
+        measurementData.push(entry);
     }
 
     measurementData.sort((a,b) => parseLocalDate(a.date) - parseLocalDate(b.date));
@@ -2280,12 +2383,14 @@ function updateLastMeasurementInfo() {
 function updateBMI() {
     const bmiScoreEl = document.getElementById('bmiScore');
     const bmiCatEl = document.getElementById('bmiCategory');
+    const bfEl = document.getElementById('bodyFatValue');
     if (!bmiScoreEl || !bmiCatEl) return;
 
     if (measurementData.length === 0) {
         bmiScoreEl.textContent = '--';
         bmiCatEl.textContent = '--';
         bmiCatEl.className = 'bmi-category';
+        if (bfEl) bfEl.textContent = '--';
         return;
     }
 
@@ -2316,6 +2421,17 @@ function updateBMI() {
     bmiScoreEl.textContent = bmi.toFixed(1);
     bmiCatEl.textContent = translations[currentLanguage][categoryKey];
     bmiCatEl.className = 'bmi-category ' + cls;
+
+    if (bfEl) {
+        const ageVal = Number(measurementData[measurementData.length - 1].age);
+        const genderStr = measurementData[measurementData.length - 1].gender;
+        if (Number.isFinite(ageVal) && (genderStr === 'male' || genderStr === 'female')) {
+            const bf = 1.20 * bmi + 0.23 * ageVal + (genderStr === 'male' ? -16.2 : -5.4);
+            bfEl.textContent = `${bf.toFixed(1)}%`;
+        } else {
+            bfEl.textContent = '--';
+        }
+    }
 }
 
 /* =========================
