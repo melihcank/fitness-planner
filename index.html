@@ -2,18 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- mobil + çentik -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
     <title>Fitness Planner</title>
+
+    <!-- ikonlar / stil -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2dc653">
-    <link rel="apple-touch-icon" href="icons/icon-512.png">
+
+    <!-- iOS / Apple PWA iyileştirmeleri -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Fitness Planner">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-512.png">
+
     <script>
       // Ensure default lang is English for native controls before JS runs
       document.documentElement.lang = 'en-US';
     </script>
-  </head>
+</head>
 
 <body>
 <div class="container">
@@ -281,7 +293,6 @@
       navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW reg failed', e); });
     });
   }
-  </script>
+</script>
 </body>
 </html>
-
